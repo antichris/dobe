@@ -42,6 +42,8 @@ RUN set -x \
 
 WORKDIR /src
 
+COPY make /
+
 USER $USER_NAME
 
 VOLUME /src

@@ -1,0 +1,15 @@
+#!/bin/sh
+
+jobsDefault=$(($(getconf _NPROCESSORS_ONLN) - 1))
+[ "$jobsDefault" -lt 1 ] && jobsDefault=1
+
+: "${IOCLASS:=3}"
+: "${IOLEVEL:=7}"
+: "${NICE:=19}"
+: "${JOBS=$jobsDefault}"
+
+ioLevelParam=$([ "$IOCLASS" -ne 3 ] && echo -n"$IOLEVEL")
+
+ionice -c"$IOCLASS" $ioLevelParam \
+	nice -n"$NICE" \
+	make -j"$JOBS" "$@"
