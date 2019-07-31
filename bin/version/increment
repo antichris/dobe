@@ -1,0 +1,59 @@
+#!/bin/sh
+
+dieWithUsage() {
+	local status=${1:-0} message="$2"
+	[ "$message" ] && printf %s\\n "$message" >&2
+	cat >&2 <<-EOD
+Usage:  $0 [VERSION_DIR] FILES...
+
+Increment the version number in VERSION_DIR/version when a change in any of the
+FILES is detected.
+
+  --help	display this help and exit
+
+Uses sha1sum to generate checksums of FILES and a checksum of those, and
+compares it against the one in VERSION_DIR/version.sum. If they do not match, the
+new checksum value is stored, and the version number in VERSION_DIR/version is
+incremented by one.
+
+VERSION_DIR defaults to ".", i.e. the current working directory.
+	EOD
+	exit "$status"
+}
+checksum() {
+	## non-local sumCmd
+	local sums sum
+	sums=$($sumCmd "$@") || exit ## Because pipelines suppress exit status.
+	sum=$(
+		printf %s "$sums" \
+			| sort \
+			| $sumCmd -
+	)
+	printf %s "${sum%  -}"
+}
+
+for arg; do
+	[ "$arg" = '--help' ] && dieWithUsage
+done
+
+versionDir=.
+if [ -d "$1" ]; then
+	versionDir=$1
+	shift
+fi
+[ $# -eq 0 ] && dieWithUsage 1 'No FILES specified'
+
+versionFile=$versionDir/version
+sumFile=$versionFile.sum
+sumCmd=sha1sum
+
+version=$(($(cat "$versionFile" 2>/dev/null || echo 0))) || exit
+oldSum=$(cat "$sumFile" 2>/dev/null)
+newSum=$(checksum "$@") || exit
+
+if [ "$oldSum" != "$newSum" ]; then
+	printf %s\\n "$newSum" >"$sumFile" || exit
+	echo $((version+=1)) >"$versionFile" || exit
+fi
+
+echo $version

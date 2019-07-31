@@ -1,0 +1,47 @@
+#!/bin/sh
+
+## Outputs the absolute path when dirname exists, returns with error otherwise.
+resolve() { readlink -f "$1"; } ## (relative_path)
+## Outputs value of variable referenced by name.
+ref() { eval echo "\$${1}"; } ## (name)
+## Sets value of variable referenced by name.
+refSet() { eval "${1}='$( printf %s "$2" | sed "s/'/'\\\\''/g")'"; } ## (name value)
+
+selfDir=$(dirname "$(resolve "$(command -v "$0")")")
+
+: "${DOBE_DIR_ROOT:=$(dirname "$selfDir")/build}"
+: "${DOBE_DIR_CACHE:=${DOBE_DIR_ROOT}/cache}"
+
+: "${DOBE_DIR_SRC:=${DOBE_DIR_ROOT}/src}"
+: "${DOBE_DIR_FEEDS:=${DOBE_DIR_ROOT}/feeds}"
+: "${DOBE_DIR_OUTPUT:=${DOBE_DIR_ROOT}/output}"
+: "${DOBE_DIR_OVERLAY:=${DOBE_DIR_ROOT}/overlay}"
+
+: "${DOBE_DIR_DL:=${DOBE_DIR_CACHE}/dl}"
+: "${DOBE_DIR_BUILD:=${DOBE_DIR_CACHE}/build}"
+: "${DOBE_DIR_STAGING:=${DOBE_DIR_CACHE}/staging}"
+: "${DOBE_DIR_TMP:=${DOBE_DIR_CACHE}/tmp}"
+
+for dir in ROOT CACHE SRC FEEDS OUTPUT OVERLAY DL BUILD STAGING TMP; do
+	path=$(ref "DOBE_DIR_${dir}" )
+	if ! resolved=$(resolve "$path"); then
+		printf 'Could not resolve the %s directory "%s"\n' "$dir" "$path"
+		exit 1
+	fi
+	[ -d "$resolved" ] || mkdir "$resolved" || exit
+	refSet "resolved_${dir}" "$resolved"
+done
+
+# shellcheck disable=SC2154
+docker run -it --rm \
+	-v "${resolved_SRC}:/src" \
+	-v "${resolved_FEEDS}:/src/feeds" \
+	-v "${resolved_OUTPUT}:/src/bin" \
+	-v "${resolved_OVERLAY}:/src/files" \
+	-v "${resolved_DL}:/src/dl" \
+	-v "${resolved_BUILD}:/src/build_dir" \
+	-v "${resolved_STAGING}:/src/staging_dir" \
+	-v "${resolved_TMP}:/src/tmp" \
+	-e "TERM=${TERM}" \
+	dobe:latest \
+	"$@"

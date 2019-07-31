@@ -1,0 +1,19 @@
+#!/bin/sh
+
+repo=dobe
+
+versions=$(
+	docker images --format '{{.Tag}}' $repo \
+		| grep -E '^v([0-9]+)$' \
+		| sort -nk1.2 \
+		| head -n-2
+)
+images=$(
+	for v in $versions; do
+		printf '%s:%s\n' $repo "$v"
+	done
+)
+
+## image:tag combos contain no special characters thus need no quoting.
+# shellcheck disable=SC2086
+[ "$images" ] && docker image rm $images
