@@ -23,7 +23,7 @@ RUN set -x \
 #    flex \
 ##  Convenience utils specific to this Docker environment.
     bash-completion \
-&&  apt-get clean \
+&&  rm -rf /var/lib/apt/lists/* \
 &&  git config -f /etc/skel/.gitconfig user.name 'Dockerized OpenWrt Build Environment' \
 &&  git config -f /etc/skel/.gitconfig user.email 'dobe@example.com' \
 &&  :
