@@ -42,7 +42,7 @@ RUN set -x \
 
 WORKDIR /src
 
-COPY make /
+COPY make pull /
 
 USER $USER_NAME
 

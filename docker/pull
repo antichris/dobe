@@ -1,0 +1,111 @@
+#!/bin/sh
+
+main() {
+	ensure_repo || exit
+
+	: "${REMOTE:=origin}"
+	: "${FEEDS=-a}"
+	: "${REF:=$(get_current_ref)}"
+
+	set_remote_url "$REMOTE" "$URL" "${URL+.}" \
+		git://git.openwrt.org/openwrt/openwrt.git || exit
+	git fetch "$REMOTE" || exit
+
+	if [ "$REF" ]; then
+		default_upstream=$REMOTE/$REF
+		ref_commit="$(get_commit "$REF")"
+		new_branch=
+
+		if [ "$(get_current_ref)" != "$REF" ] || [ ! "$ref_commit" ]; then
+			if branch_or_tag_exists "$REF" || [ "$ref_commit" ]; then
+				git checkout "$REF" || exit
+			else
+				git checkout -b "$REF" "${UPSTREAM:-$default_upstream}" || exit
+				new_branch=1
+			fi
+		fi
+
+		if [ ! "$new_branch" ] && is_branch "$REF"; then
+			current_upstream=$(get_upstream)
+
+			: "${UPSTREAM:=${current_upstream:-$default_upstream}}"
+
+			if [ "$current_upstream" != "$UPSTREAM" ]; then
+				change_or_remove_upstream "$UPSTREAM" "$current_upstream"
+			fi
+			update_branch "$REF" "$UPSTREAM" || exit
+		fi
+	fi
+
+	if [ "$FEEDS" ]; then
+		# shellcheck disable=SC2086
+		update_and_install_feeds $FEEDS
+	fi
+}
+
+ensure_repo() {
+	git rev-parse --show-toplevel >/dev/null 2>&1 \
+		|| git init;
+}
+get_current_ref() {
+	git symbolic-ref -q --short HEAD \
+		|| git describe --tags --exact-match 2>/dev/null
+}
+set_remote_url() {
+	local remote="$1" url="$2" is_set="$3" default_url="$4" current_url
+	if ! current_url="$(get_remote_url "$remote")"; then
+		git remote add "$remote" "${url:-$default_url}"
+	elif [ "$is_set" ] && [ "${url:=$default_url}" != "$current_url" ]; then
+		git remote set-url "$remote" "$url"
+	fi
+}
+get_remote_url() { git remote get-url "$1" 2>/dev/null; }
+checkout_or_create() {
+	local ref="$1" upstream="$2"
+	if branch_or_tag_exists "$ref"; then
+		git checkout "$ref"
+	else
+		checkout_new_branch "$ref" "$upstream"
+	fi
+}
+branch_or_tag_exists() { git show-ref -q --tags --heads "$1"; }
+checkout_new_branch() {
+	if [ "$2" ]; then
+		git checkout -b "$1" "$2"
+	else
+		git checkout -b "$1"
+	fi
+}
+get_commit() { git rev-parse -q --short "$1"; }
+is_branch() { git show-ref -q --heads "$1"; }
+get_upstream() { git rev-parse --abbrev-ref '@{upstream}' 2>/dev/null; }
+change_or_remove_upstream() {
+	local new="$1" old="$2"
+	if ! is_tag "$new" && ref_exists "$new"; then
+		git branch -u "$new"
+	elif [ "$old" ]; then
+		git branch --unset-upstream
+	fi
+}
+ref_exists() { git show-ref -q "$1"; }
+is_tag() { git show-ref -q --tags "$1"; }
+update_branch() {
+	local ref="$1" upstream="${2:-@\{upstream\}}" count
+	count=$(diff_count "${upstream}...${ref}")
+	case "$count" in
+	"0	0") ;; ## already there
+	"0	"*) ;; ## nothing new in upstream
+	*"	0"|"")
+		git checkout -B "$ref" "$upstream" ;;
+	*)
+		git rebase -p "$upstream"
+	esac
+}
+diff_count() { git rev-list --count --left-right "$1" 2>/dev/null; }
+update_and_install_feeds() {
+	scripts/feeds update "$@" || return $?
+	echo 'Feeds done updating, now installing...'
+	scripts/feeds install "$@"
+}
+
+main "$@"
