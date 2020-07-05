@@ -98,7 +98,7 @@ update_branch() {
 	*"	0"|"")
 		git checkout -B "$ref" "$upstream" ;;
 	*)
-		git rebase -p "$upstream"
+		git rebase -r "$upstream"
 	esac
 }
 diff_count() { git rev-list --count --left-right "$1" 2>/dev/null; }
