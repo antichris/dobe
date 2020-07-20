@@ -23,27 +23,18 @@ RUN set -x \
 #    flex \
 ##  Convenience utils specific to this Docker environment.
     bash-completion \
+    gosu \
 &&  rm -rf /var/lib/apt/lists/* \
 &&  git config -f /etc/skel/.gitconfig user.name 'Dockerized OpenWrt Build Environment' \
 &&  git config -f /etc/skel/.gitconfig user.email 'dobe@example.com' \
 &&  :
 
-##  These should be addjusted to match UID and GID of the mounted dirs.
-ARG USER_ID=1000
-ARG GROUP_ID=1000
-ARG USER_NAME=openwrt
-ARG GROUP_NAME=openwrt
-
-RUN set -x \
-##  Add non-root user and group, give full sudo access not requiring password.
-&&  groupadd -g $GROUP_ID $GROUP_NAME \
-&&  useradd -lmg $GROUP_NAME -u $USER_ID $USER_NAME \
-&&  echo "$USER_NAME ALL=NOPASSWD: ALL" > /etc/sudoers.d/$USER_NAME
-
 WORKDIR /src
 
 COPY make pull /
+COPY entrypoint /usr/bin/entrypoint
 
-USER $USER_NAME
+ENTRYPOINT ["entrypoint"]
+CMD ["/bin/bash"]
 
 VOLUME /src

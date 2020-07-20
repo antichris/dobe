@@ -22,6 +22,9 @@ selfDir=$(dirname "$(resolve "$(command -v "$0")")")
 : "${DOBE_DIR_STAGING:=${DOBE_DIR_CACHE}/staging}"
 : "${DOBE_DIR_TMP:=${DOBE_DIR_CACHE}/tmp}"
 
+: "${DOBE_ID_USER:=$(id -u)}"
+: "${DOBE_ID_GROUP:=$(id -g)}"
+
 for dir in ROOT CACHE SRC FEEDS OUTPUT OVERLAY DL BUILD STAGING TMP; do
 	path=$(ref "DOBE_DIR_${dir}" )
 	if ! resolved=$(resolve "$path"); then
@@ -43,5 +46,7 @@ docker run -it --rm \
 	-v "${resolved_STAGING}:/src/staging_dir" \
 	-v "${resolved_TMP}:/src/tmp" \
 	-e "TERM=${TERM}" \
+	-e "USER_ID=${DOBE_ID_USER}" \
+	-e "GROUP_ID=${DOBE_ID_GROUP}" \
 	dobe:latest \
 	"$@"

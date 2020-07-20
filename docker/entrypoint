@@ -1,0 +1,10 @@
+#!/bin/sh
+
+: "${USER_ID:=$(stat -c%u .)}"
+: "${GROUP_ID:=$(stat -c%g .)}"
+: "${GROUP_NAME:=${USER_NAME:=dobe}}"
+
+groupadd -g "$GROUP_ID" "$GROUP_NAME" || exit
+useradd -lmg "$GROUP_NAME" -u "$USER_ID" "$USER_NAME" || exit
+
+exec gosu "$USER_NAME" "$@"
