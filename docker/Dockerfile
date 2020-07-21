@@ -1,3 +1,8 @@
+FROM ubuntu:20.04 AS prompt-setup
+
+COPY prompt-setup /
+RUN /prompt-setup /etc/skel/.bashrc
+
 FROM ubuntu:20.04
 
 RUN set -x \
@@ -32,6 +37,7 @@ RUN set -x \
 WORKDIR /src
 
 COPY make pull /
+COPY --from=prompt-setup /etc/skel/.bashrc /etc/skel/.bashrc
 COPY entrypoint /usr/bin/entrypoint
 
 ENTRYPOINT ["entrypoint"]
