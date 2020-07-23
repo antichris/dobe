@@ -7,4 +7,12 @@
 groupadd -g "$GROUP_ID" "$GROUP_NAME" || exit
 useradd -lmg "$GROUP_NAME" -u "$USER_ID" "$USER_NAME" || exit
 
-exec gosu "$USER_NAME" "$@"
+execGosu() { exec gosu "$USER_NAME" "$@"; }
+
+if [ "$(command -v "$1")" ]; then
+	execGosu "$@"
+elif [ $# -eq 1 ]; then
+	execGosu sh -c "$1"
+else
+	echo "$@" | execGosu sh -s
+fi
