@@ -32,6 +32,11 @@ RUN set -x \
 &&  rm -rf /var/lib/apt/lists/* \
 &&  git config -f /etc/skel/.gitconfig user.name 'Dockerized OpenWrt Build Environment' \
 &&  git config -f /etc/skel/.gitconfig user.email 'dobe@example.com' \
+&&  ssh-keyscan \
+    github.com \
+    gitlab.com \
+    bitbucket.org \
+    >> /etc/ssh/ssh_known_hosts \
 &&  :
 
 WORKDIR /src
