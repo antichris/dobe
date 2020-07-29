@@ -16,6 +16,7 @@ selfDir=$(dirname "$(resolve "$(command -v "$0")")")
 : "${DOBE_DIR_FEEDS:=${DOBE_DIR_ROOT}/feeds}"
 : "${DOBE_DIR_OUTPUT:=${DOBE_DIR_ROOT}/output}"
 : "${DOBE_DIR_OVERLAY:=${DOBE_DIR_ROOT}/overlay}"
+: "${DOBE_DIR_SSH:=${DOBE_DIR_ROOT}/ssh}"
 
 : "${DOBE_DIR_DL:=${DOBE_DIR_CACHE}/dl}"
 : "${DOBE_DIR_BUILD:=${DOBE_DIR_CACHE}/build}"
@@ -25,7 +26,7 @@ selfDir=$(dirname "$(resolve "$(command -v "$0")")")
 : "${DOBE_ID_USER:=$(id -u)}"
 : "${DOBE_ID_GROUP:=$(id -g)}"
 
-for dir in ROOT CACHE SRC FEEDS OUTPUT OVERLAY DL BUILD STAGING TMP; do
+for dir in ROOT CACHE SRC FEEDS OUTPUT OVERLAY SSH DL BUILD STAGING TMP; do
 	path=$(ref "DOBE_DIR_${dir}" )
 	if ! resolved=$(resolve "$path"); then
 		printf 'Could not resolve the %s directory "%s"\n' "$dir" "$path"
@@ -41,6 +42,7 @@ docker run -it --rm \
 	-v "${resolved_FEEDS}:/src/feeds" \
 	-v "${resolved_OUTPUT}:/src/bin" \
 	-v "${resolved_OVERLAY}:/src/files" \
+	-v "${resolved_SSH}:/home/dobe.ssh" \
 	-v "${resolved_DL}:/src/dl" \
 	-v "${resolved_BUILD}:/src/build_dir" \
 	-v "${resolved_STAGING}:/src/staging_dir" \

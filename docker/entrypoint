@@ -6,6 +6,7 @@
 
 groupadd -g "$GROUP_ID" "$GROUP_NAME" || exit
 useradd -lmg "$GROUP_NAME" -u "$USER_ID" "$USER_NAME" || exit
+ln -s /home/dobe.ssh "/home/${USER_NAME}/.ssh"
 
 execGosu() { exec gosu "$USER_NAME" "$@"; }
 
