@@ -395,6 +395,11 @@ This directory can be used to store SSH key pairs and configuration (as well as 
 It is mounted as `/home/dobe.ssh`, but the [`entrypoint`][entrypoint] will create a symbolic link for it in the home directory of the user created in the container (as `~/.ssh`).
 
 
+## License
+
+This project is licensed under [Mozilla Public License Version 2.0][mpl]. See [LICENSE](LICENSE).
+
+
 [wiki-build-system]: https://openwrt.org/docs/guide-developer/build-system/start
 	"OpenWrt Project: The Build System"
 
@@ -421,3 +426,6 @@ It is mounted as `/home/dobe.ssh`, but the [`entrypoint`][entrypoint] will creat
 	"git.openwrt.org Git - openwrt/openwrt.git/tags"
 [repo-heads]: https://git.openwrt.org/?p=openwrt/openwrt.git;a=heads
 	"git.openwrt.org Git - openwrt/openwrt.git/heads"
+
+[mpl]: https://www.mozilla.org/en-US/MPL/2.0/
+	"Mozilla Public License, version 2.0"
