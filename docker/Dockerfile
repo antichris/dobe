@@ -9,6 +9,7 @@ RUN /prompt-setup /etc/skel/.bashrc
 
 FROM ubuntu:20.04
 
+##  FIXME Pin package versions to prevent unexpected build breakages.
 RUN set -x \
 &&  apt-get update \
 &&  apt-get install -y --no-install-recommends \
@@ -33,6 +34,7 @@ RUN set -x \
 ##  Convenience utils specific to this Docker environment.
     bash-completion \
     gosu \
+    openssh-client \
 &&  rm -rf /var/lib/apt/lists/* \
 &&  git config -f /etc/skel/.gitconfig user.name 'Dockerized OpenWrt Build Environment' \
 &&  git config -f /etc/skel/.gitconfig user.email 'dobe@example.com' \
